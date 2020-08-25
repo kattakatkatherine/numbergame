@@ -1,8 +1,6 @@
 section .data
 	prompt db "Enter your first guess.", 0x0a
 	plen equ $ - prompt
-	done db "You did it!", 0x0a
-	dlen equ $ - done
 	lower db "Try lower.", 0x0a
 	llen equ $ - lower
 	higher db "Try higher.", 0x0a
@@ -18,7 +16,24 @@ section .text
 	global _start
 
 _start:
-	mov [ans], word '04'	; set answer
+	mov eax, 13
+	push eax
+	mov ebx, esp
+	int 0x80
+	pop eax
+	mov [ans], al
+
+	mov eax, dword [ans]
+	xor edx, edx
+	mov ebx, 10
+	div ebx
+	add edx, '0'
+	mov [ans], edx
+
+	xor edx, edx
+	div ebx
+	add edx, '0'
+	mov [ans+1], edx
 
 	; print prompt
 	mov eax, 4				; sys_write
