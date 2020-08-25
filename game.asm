@@ -8,84 +8,93 @@ section .data
 	correct db "Correct!", 0x0a
 	clen equ $ - correct
 
+	base equ 10				; base to play game in
+	digits equ 2			; number of digits in answer
+
 section .bss
-	ans resb 2
-	guess resb 3
+	ans resb digits
+	guess resb digits+1
 
 section .text
 	global _start
 
 _start:
-	mov eax, 13
-	push eax
-	mov ebx, esp
-	int 0x80
-	pop eax
-	mov [ans], al
+	; generate random number
+	mov eax, 13				; sys_time
+	mov ebx, esp			; pointer 
+	int 0x80				; syscall
+	pop eax					; get system time
+	mov ebx, base			; base to convert to
+	mov ecx, 0				; start counter
 
-	mov eax, dword [ans]
-	xor edx, edx
-	mov ebx, 10
-	div ebx
-	add edx, '0'
-	mov [ans], edx
-
-	xor edx, edx
-	div ebx
-	add edx, '0'
-	mov [ans+1], edx
+toascii:
+	; convert random number to ascii
+	xor edx, edx			; clear edx
+	div ebx					; divide number by base
+	add edx, '0'			; convert remainder to ascii
+	mov [ans+ecx], edx		; move digit to ans
+	push edx				; push digit
+	inc ecx					; increment counter
+	cmp ecx, digits			; less than two?
+	jl toascii				; repeat
 
 	; print prompt
-	mov eax, 4				; sys_write
-	mov ebx, 1				; stdout
-	mov ecx, prompt			; prompt
-	mov edx, plen			; length
-	int 0x80				; syscall
+	push prompt				; prompt
+	push plen				; length
+	call print				; syscall
 
 gameloop:
-	; get guess
+	; read guess
 	mov eax, 3				; sys_read
 	mov ebx, 0				; stdin
 	mov ecx, guess			; address
-	mov edx, 3				; length
-	int 0x80
+	mov edx, digits+1		; length
+	int 0x80				; syscall
 
-	mov al, [guess]
-	cmp [ans], al
-	jl less
-	jg greater
-	jne gameloop
-	mov al, [guess+1]
-	cmp [ans+1], al
-	jl less
-	jg greater
-	jne gameloop			; repeat
+	mov ecx, 0				; start counter
+
+check:
+	; compare guess to solution
+	mov al, [guess+ecx]		; first digit
+	cmp [ans+ecx], al		; compare
+	jl less					; smaller?
+	jg greater				; bigger?
+	inc ecx					; increment counter
+	cmp ecx, digits			; less than two?
+	jl check				; repeat
 
 exit:
-	mov eax, 4				; sys_write
-	mov ebx, 1				; stdout
-	mov ecx, correct		; prompt
-	mov edx, clen			; length
-	int 0x80				; syscall
+	push correct			; "Correct!"
+	push clen				; length
+	call print				; print
 
 	mov eax, 1				; sys_exit
 	mov ebx, 0				; success
 	int 0x80				; syscall
 
 less:
-	mov eax, 4				; sys_write
-	mov ebx, 1				; stdout
-	mov ecx, lower			; prompt
-	mov edx, llen			; length
-	int 0x80				; syscall
+	push lower				; "Try lower."
+	push llen				; length
+	call print				; print
 
-	jmp gameloop
+	jmp gameloop			; repeat
 
 greater:
+	push higher				; "Try higher."
+	push hlen				; length
+	call print				; print
+
+	jmp gameloop			; repeat
+
+print:
+	mov ebp, esp			; save esp
+	add esp, 4
+
 	mov eax, 4				; sys_write
 	mov ebx, 1				; stdout
-	mov ecx, higher			; prompt
-	mov edx, hlen			; length
+	pop edx					; length
+	pop ecx					; string
 	int 0x80				; syscall
 
-	jmp gameloop
+	mov esp, ebp			; restore esp
+	ret						; return
