@@ -19,13 +19,11 @@ section .text
 	global _start
 
 _start:
-	; generate random number
+	; generate solution
 	mov eax, 13				; sys_time
-	mov ebx, esp			; stack pointer 
 	int 0x80				; syscall
-	pop eax					; get system time
 	mov ebx, base			; base to convert to
-	xor ecx, 0				; start counter
+	xor ecx, ecx			; start counter
 
 toascii:
 	xor edx, edx			; clear edx
@@ -44,7 +42,7 @@ toascii:
 gameloop:
 	; read guess
 	mov eax, 3				; sys_read
-	mov ebx, 0				; stdin
+	xor ebx, ebx			; stdin
 	mov ecx, guess			; address
 	mov edx, digits+1		; length
 	int 0x80				; syscall
@@ -67,7 +65,7 @@ exit:
 	call print				; print
 
 	mov eax, 1				; sys_exit
-	mov ebx, 0				; success
+	xor ebx, ebx			; success
 	int 0x80				; syscall
 
 less:
