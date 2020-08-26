@@ -8,12 +8,12 @@ section .data
 	correct db "Correct!", 0x0a
 	clen equ $ - correct
 
-	base equ 10				; base to play game in
-	digits equ 2			; number of digits in answer
+	base equ 10				; base
+	digits equ 2			; number of digits
 
 section .bss
-	ans resb digits
-	guess resb digits+1
+	ans resb digits			; solution
+	guess resb digits+1		; guess
 
 section .text
 	global _start
@@ -21,14 +21,13 @@ section .text
 _start:
 	; generate random number
 	mov eax, 13				; sys_time
-	mov ebx, esp			; pointer 
+	mov ebx, esp			; stack pointer 
 	int 0x80				; syscall
 	pop eax					; get system time
 	mov ebx, base			; base to convert to
-	mov ecx, 0				; start counter
+	xor ecx, 0				; start counter
 
 toascii:
-	; convert random number to ascii
 	xor edx, edx			; clear edx
 	div ebx					; divide number by base
 	add edx, '0'			; convert remainder to ascii
@@ -38,10 +37,9 @@ toascii:
 	cmp ecx, digits			; less than two?
 	jl toascii				; repeat
 
-	; print prompt
 	push prompt				; prompt
 	push plen				; length
-	call print				; syscall
+	call print				; print
 
 gameloop:
 	; read guess
@@ -88,7 +86,7 @@ greater:
 
 print:
 	mov ebp, esp			; save esp
-	add esp, 4
+	add esp, 4				; allocate space in stack
 
 	mov eax, 4				; sys_write
 	mov ebx, 1				; stdout
