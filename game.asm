@@ -22,6 +22,8 @@ _start:
 	; generate solution
 	mov eax, 13				; sys_time
 	int 0x80				; syscall
+	mul eax					; square
+	mov al, ah				; middle
 	mov ebx, base			; base to convert to
 	xor ecx, ecx			; start counter
 
