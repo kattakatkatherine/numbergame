@@ -4,10 +4,11 @@ main = do putStrLn "Enter your first guess."
           n <- randomRIO (1, 100) :: IO Int
           gameloop n 1
 
-check n g x
- | read g < n = putStrLn "Try higher." >> gameloop n (x + 1)
- | read g > n = putStrLn "Try lower." >> gameloop n (x + 1)
- | otherwise = putStrLn ("You won in " ++ show x ++ " guesses!")
+check n g
+ | read g < n = "Try higher."
+ | read g > n = "Try lower."
 
 gameloop n x = do g <- getLine
-                  check n g x
+                  if read g /= n
+                  then putStrLn (check n g) >> gameloop n (x + 1)
+                  else putStrLn $ "You won in " ++ show x ++ " guesses!"
